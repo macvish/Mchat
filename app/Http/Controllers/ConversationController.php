@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\Conversation;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class ConversationController extends Controller
 {
@@ -26,12 +27,34 @@ class ConversationController extends Controller
      */
     public function store(Request $request)
     {
-        $conversation = new Conversation();
+        try
+        {
+            $this->validate($request, [
+                'user_id' => 'required|required',
+                'to' => 'required|integer'
+            ]);
 
-        $conversation->user_id = $request->user_id;
-        $conversation->to = $request->to;
+            $conversation = new Conversation();
 
-        $conversation->save();
+            $conversation->user_id = $request->user_id;
+            $conversation->to = $request->to;
+
+            $conversation->save();
+
+            return response()->json([
+                'message' => 'Conversation created'
+                ]);
+        } catch(ValidationException $v)
+        {
+            return response()->json([
+                'error_message' => $v->validator->errors()->first()
+            ], 422);
+        } catch(\Exception $e)
+        {
+            return response()->json([
+                'error_message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -54,7 +77,7 @@ class ConversationController extends Controller
      */
     public function update(Request $request, Conversation $conversation)
     {
-        //
+        // $conversation->to = $request->to;
     }
 
     /**

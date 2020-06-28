@@ -77,7 +77,12 @@ class RegisterController extends Controller
             'password' => Hash::make($data['password']),
         ]);
 
-        $token = $this->respondWithToken($user);
+        $login = auth()->attempt([
+            'username' => $data['username'],
+            'password' => $data['password']
+        ]);
+
+        $token = $this->respondWithToken($login);
     }
 
     /**

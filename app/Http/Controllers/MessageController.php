@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Model\Message;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 class MessageController extends Controller
 {
@@ -26,7 +27,36 @@ class MessageController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        try
+        {
+
+            $this->validate($request, [
+                'conversation_id' => 'required|integer',
+                'message' => 'required',
+            ]);
+
+            $message = new Message();
+
+            $message->conversation_id = $request->conversation_id;
+            $message->message = $request->message;
+
+            $message->save();
+
+            return response()->json([
+                'message' => 'Message sent'
+            ], 201);
+            
+        } catch(ValidationException $v)
+        {
+            return response()->json([
+                'error_message' => $v->validator->errors()->first(),
+            ], 422);
+        } catch(\Exception $e)
+        {
+            return response()->json([
+                'error_message' => $e->getMessage()
+            ], 500);
+        }
     }
 
     /**
@@ -37,7 +67,7 @@ class MessageController extends Controller
      */
     public function show(Message $message)
     {
-        //
+        return response()->json($message, 200);
     }
 
     /**
@@ -49,7 +79,8 @@ class MessageController extends Controller
      */
     public function update(Request $request, Message $message)
     {
-        //
+        $message->message = $request->message;
+        $message->save();
     }
 
     /**
@@ -60,6 +91,6 @@ class MessageController extends Controller
      */
     public function destroy(Message $message)
     {
-        //
+        $message->delete();
     }
 }

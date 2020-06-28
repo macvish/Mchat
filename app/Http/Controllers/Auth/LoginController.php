@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Auth;
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Auth;
-// use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -22,7 +22,7 @@ class LoginController extends Controller
     |
     */
 
-    // use AuthenticatesUsers;
+    use AuthenticatesUsers;
 
     /**
      * Where to redirect users after login.
@@ -84,14 +84,7 @@ class LoginController extends Controller
      */
     public function me()
     {
-        dd(auth()->user());
-        return response()->json($this->guard('api')->user());
-    }
-
-    public function user()
-    {
-        $user = Auth::check();
-        return dd($user);
+        return response()->json($this->guard()->user());
     }
 
     /**
