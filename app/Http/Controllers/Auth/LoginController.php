@@ -4,7 +4,8 @@ namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
 use App\Providers\RouteServiceProvider;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use Illuminate\Support\Facades\Auth;
+// use Illuminate\Foundation\Auth\AuthenticatesUsers;
 use Illuminate\Http\Request;
 use Illuminate\Validation\ValidationException;
 
@@ -21,7 +22,7 @@ class LoginController extends Controller
     |
     */
 
-    use AuthenticatesUsers;
+    // use AuthenticatesUsers;
 
     /**
      * Where to redirect users after login.
@@ -42,6 +43,7 @@ class LoginController extends Controller
 
     public function login(Request $request)
     {
+        // dd($request);
         try
         {
             $this->validate($request,[
@@ -49,14 +51,14 @@ class LoginController extends Controller
                 'password' => 'required|bail|string'
             ]);
 
-            if(auth()->attempt(['username' => $request->username, 'password' => $request->password]))
+            if($token = auth()->attempt(['username' => $request->username, 'password' => $request->password]))
             {
-                return response()->json(auth()->user(), 200);
+                return $this->respondWithToken($token);
             }
 
-            if(auth()->attempt(['phone_number' => $request->username, 'password' => $request->password]))
+            if($token = auth()->attempt(['phone_number' => $request->username, 'password' => $request->password]))
             {
-                return response()->json(auth()->user(), 200);
+                return $this->respondWithToken($token);
             }
 
             return response()->json([
@@ -73,5 +75,71 @@ class LoginController extends Controller
                 'error_message' => ''.$ex->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Get the authenticated User
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function me()
+    {
+        dd(auth()->user());
+        return response()->json($this->guard('api')->user());
+    }
+
+    public function user()
+    {
+        $user = Auth::check();
+        return dd($user);
+    }
+
+    /**
+     * Log the user out (Invalidate the token)
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function logout()
+    {
+        $this->guard()->logout();
+
+        return response()->json(['message' => 'Successfully logged out']);
+    }
+
+    /**
+     * Refresh a token.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function refresh()
+    {
+        return $this->respondWithToken($this->guard()->refresh());
+    }
+
+    /**
+     * Get the token array structure.
+     *
+     * @param  string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'message' => 'You are successfully logged in',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => $this->guard()->factory()->getTTL() * 60
+        ]);
+    }
+
+    /**
+     * Get the guard to be used during authentication.
+     *
+     * @return \Illuminate\Contracts\Auth\Guard
+     */
+    public function guard()
+    {
+        return Auth::guard();
     }
 }

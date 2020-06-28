@@ -14,7 +14,8 @@ class MessageController extends Controller
      */
     public function index()
     {
-        //
+        $messages = Message::get();
+        return response()->json($messages, 200);
     }
 
     /**

@@ -8,8 +8,9 @@ use App\User;
 use Illuminate\Foundation\Auth\RegistersUsers;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+// use Tymon\JWTAuth\Contracts\JWTSubject;
 
-class RegisterController extends Controller
+class RegisterController extends Controller 
 {
     /*
     |--------------------------------------------------------------------------
@@ -23,6 +24,8 @@ class RegisterController extends Controller
     */
 
     use RegistersUsers;
+
+    
 
     /**
      * Where to redirect users after registration.
@@ -51,9 +54,9 @@ class RegisterController extends Controller
     {
         return Validator::make($data, [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255'],
+            'username' => ['required', 'string', 'max:255', 'unique:users'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'phone_number' => ['required', 'digit_between:10,12', 'unique:users'],
+            'phone_number' => ['required', 'digits_between:11,15', 'unique:users'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
     }
@@ -66,12 +69,31 @@ class RegisterController extends Controller
      */
     protected function create(array $data)
     {
-        return User::create([
+        $user = User::create([
             'name' => $data['name'],
             'username' => $data['username'],
             'email' => $data['email'],
             'phone_number' => $data['phone_number'],
             'password' => Hash::make($data['password']),
+        ]);
+
+        $token = $this->respondWithToken($user);
+    }
+
+    /**
+     * Get the token array structure.
+     *
+     * @param  string $token
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    protected function respondWithToken($token)
+    {
+        return response()->json([
+            'message' => 'User created successfully',
+            'access_token' => $token,
+            'token_type' => 'bearer',
+            'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }
 }
